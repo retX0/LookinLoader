@@ -1,0 +1,47 @@
+{
+	entry = {
+		cell = PSLinkCell;
+		label = Lookin;
+		icon = "logo.png";
+		items = (
+			{
+				bundle = AppList;
+				isController = 1;
+				cell = PSLinkCell;
+				label = "Enabled Applications";
+				ALSettingsPath = "/var/mobile/Library/Preferences/com.x.lookinloader.plist";
+				ALSettingsKeyPrefix = "LookinEnabled-";
+				"ALSettingsDefaultValue" = "";
+				ALAllowsSelection = 1;
+				ALSectionDescriptors = (
+					{
+						items = ();
+						"footer-title" = "Select which applications to load Lookin into.";
+					},
+					{
+						title = "User Applications";
+						predicate = "isSystemApplication = FALSE";
+						"icon-size" = 29;
+						"suppress-hidden-apps" = 1;
+						"cell-class-name" = ALSwitchCell;
+					},
+					{
+						title = "System Applications";
+						predicate = "isSystemApplication = TRUE AND NOT (displayIdentifier IN {'com.iptm.bigboss.sbsettings', 'com.booleanmagic.overboard', 'eu.heinelt.ifile'})";
+						"icon-size" = 29;
+						"suppress-hidden-apps" = 1;
+						"cell-class-name" = ALSwitchCell;
+					},
+				);
+			},
+			{
+				cell = PSGroupCell;
+				footerText = "This tweak is not officially supported. For more information about Lookin.app and runtime debugging see https://lookin.work";
+			},
+			{
+				cell = PSGroupCell;
+				footerText = "";
+			},
+		);
+	};
+}

@@ -1,0 +1,9 @@
+Package: com.x.lookinloader
+Name: LookinLoader
+Depends: mobilesubstrate, preferenceloader, applist
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Lookin Loader, unofficial
+Maintainer: developer
+Author: developer
+Section: Tweaks
