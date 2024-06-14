@@ -5,8 +5,9 @@ Lookin的Loader，与RevealLoader功能 一致。
 
 
 iOS 12使用流程
-1. `codesign -f -s "iPhone Developer: xxxxxx" layout/Library/LookinLoader/LookinServer`
-2. 编译并安装到设备
+1. 使用命令查看 identity `security find-identity -p codesigning -v`
+2. `codesign -f -s "iPhone Developer: xxxxxx" layout/Library/LookinLoader/LookinServer`
+3. 编译并安装到设备
 
 TODO:
 1. iOS 12使用`jtool`  签名之后仍然无法在越狱设备上运行
