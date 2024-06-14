@@ -1,6 +1,7 @@
-export TARGET=:clang:latest:7.0
-export ARCHS=armv7 armv7s arm64
+ARCHS = arm64 arm64e
+TARGET = iphone:clang:latest:14.0
 
+THEOS_PACKAGE_SCHEME = rootless
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = LookinLoader
