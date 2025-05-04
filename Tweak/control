@@ -3,7 +3,7 @@ Name: LookinLoader
 Depends: mobilesubstrate (>= 0.9.5000), preferenceloader (>= 2.2.3)
 Version: 1.0
 Architecture: iphoneos-arm
-Description: Lookin Loader, unofficial
-Maintainer: retX0 
+Description: Lookin Loader – see https://github.com/retX0/LookinLoader for details.
+Maintainer: retX0
 Author: retX0
 Section: Tweaks
