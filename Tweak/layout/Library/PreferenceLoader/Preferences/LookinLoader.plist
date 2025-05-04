@@ -8,10 +8,10 @@
 				bundle = AppList;
 				isController = 1;
 				cell = PSLinkCell;
-				label = "Enabled Applications";
-				ALSettingsPath = "/var/mobile/Library/Preferences/com.x.lookinloader.plist";
+				label = "Lookin Server Enabled Applications";
+				ALSettingsPath = "/var/mobile/Library/Preferences/dev.ret0.lookinloader.plist";
 				ALSettingsKeyPrefix = "LookinEnabled-";
-				"ALSettingsDefaultValue" = "";
+				ALSettingsDefaultValue = 0;
 				ALAllowsSelection = 1;
 				ALSectionDescriptors = (
 					{
