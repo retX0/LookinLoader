@@ -35,7 +35,20 @@ include $(THEOS_MAKE_PATH)/tweak.mk
 # We keep a template named "control.in" with a placeholder.
 # before‑package is the last hook before dpkg-deb runs.
 
-before-package:: gen-control
+before-package:: gen-control sign-lookinserver
+
+LOOKIN_SRC  := layout/Library/LookinLoader/LookinServer
+LOOKIN_DST  := $(if $(filter $(THEOS_PACKAGE_SCHEME),rootless),\
+							 $(THEOS_STAGING_DIR)/var/jb/Library/LookinLoader,\
+							 $(THEOS_STAGING_DIR)/Library/LookinLoader)
+
+sign-lookinserver:
+	@echo "[build] › preparing LookinServer …"
+	@mkdir -p $(LOOKIN_DST)
+	@cp -f $(LOOKIN_SRC) $(LOOKIN_DST)/
+	@ldid -e $(LOOKIN_DST)/LookinServer >/dev/null 2>&1 || \
+		{ echo "[build] › ad-hoc signing LookinServer"; \
+		ldid -S $(LOOKIN_DST)/LookinServer; }
 
 gen-control:
 	@echo "[build] > Writing Architecture $(PACKAGE_ARCH) into DEBIAN/control"
@@ -44,3 +57,4 @@ gen-control:
 # ─── Post‑install helper ──────────────────────────────────
 after-install::
 	install.exec "killall -9 SpringBoard"
+
