@@ -1,19 +1,12 @@
-Lookin的Loader，与RevealLoader功能 一致。
+# LookinLoader, a Tweak for LookinSever
 
-使用方法:
-1.   编译并安装到设备
+LookinLoader lets you choose specific applications where you want to observe the view hierarchy via LookinServer.
+It uses the AltList library for app selection within the Settings pane (loaded by PreferenceLoader), replacing the older AppList.
+Download the correct `.deb` package from the [Action page](https://github.com/retX0/LookinLoader/actions): install the rootful version for rootful jailbreaks, or the rootless version for rootless jailbreaks.
+For further information about Lookin itself, please visit the official website: http://lookin.work.
 
-
-iOS 12使用流程
-1. 使用命令查看 identity `security find-identity -p codesigning -v`
-2. `codesign -f -s "iPhone Developer: xxxxxx" layout/Library/LookinLoader/LookinServer`
-3. 编译并安装到设备
-
-TODO:
-1. iOS 12使用`jtool`  签名之后仍然无法在越狱设备上运行
-2. 添加自动更新`LookinServer`的功能
-
-参考:
+References:
 1. [Reveal-Loader](https://github.com/jkyin/Reveal-Loader)
 2. [Lookin](https://lookin.work/)
+3. [AltList](https://github.com/opa334/AltList/)
 
