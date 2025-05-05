@@ -1,36 +1,33 @@
 {
 	entry = {
-		cell = PSLinkCell;
+		cell  = PSLinkCell;
 		label = Lookin;
-		icon = "logo.png";
+		icon  = "logo.png";
+
 		items = (
 			{
-				bundle = AppList;
+				bundle = AltList;
+				cell   = PSLinkListCell;
+				detail = ATLApplicationListMultiSelectionController;
+        overridePrincipalClass = 1;
 				isController = 1;
-				cell = PSLinkCell;
-				label = "Lookin Server Enabled Applications";
-				ALSettingsPath = "/var/mobile/Library/Preferences/dev.ret0.lookinloader.plist";
-				ALSettingsKeyPrefix = "LookinEnabled-";
-				ALSettingsDefaultValue = 0;
-				ALAllowsSelection = 1;
-				ALSectionDescriptors = (
+
+				defaults = "dev.ret0.lookinloader";
+        key      = "enabledApps";
+
+				label = "Enabled Applications";
+
+				useSearchBar                 = 1;
+        hideSearchBarWhileScrolling  = 1;
+				defaultApplicationSwitchValue = 0;
+        showIdentifiersAsSubtitle = 1;
+
+				sections = (
 					{
-						items = ();
-						"footer-title" = "Select which applications to load Lookin into.";
+						sectionType       = User;
 					},
 					{
-						title = "User Applications";
-						predicate = "isSystemApplication = FALSE";
-						"icon-size" = 29;
-						"suppress-hidden-apps" = 1;
-						"cell-class-name" = ALSwitchCell;
-					},
-					{
-						title = "System Applications";
-						predicate = "isSystemApplication = TRUE AND NOT (displayIdentifier IN {'com.iptm.bigboss.sbsettings', 'com.booleanmagic.overboard', 'eu.heinelt.ifile'})";
-						"icon-size" = 29;
-						"suppress-hidden-apps" = 1;
-						"cell-class-name" = ALSwitchCell;
+						sectionType       = System;
 					},
 				);
 			},
