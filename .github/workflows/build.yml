@@ -1,0 +1,144 @@
+name: Build LookinServer when upstream or local code changes
+
+on:
+  push:                     # Trigger on push to any branch
+  workflow_dispatch:        # Manual trigger
+  schedule:                 # Daily check once
+    - cron: "0 3 * * *"     # 03:00 UTC ≈ 20:00 Vancouver
+
+env:
+  LOOKIN_DEMO_PATH: LookinDemo/OC_Pod
+  DEMO_SCHEME:      LookinDemoOC
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      upstream_changed: ${{ steps.set.outputs.up_changed }}
+      sha:              ${{ steps.set.outputs.sha }}
+      local_changed:    ${{ steps.filter.outputs.build }}
+      should_build:     ${{ steps.set.outputs.should }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # ① Get the latest commit SHA from QMUI/LookinServer
+    - name: Fetch upstream SHA
+      id: upstream
+      run: |
+        SHA=$(git ls-remote https://github.com/QMUI/LookinServer.git refs/heads/main | cut -f1)
+        echo "sha=$SHA" >> $GITHUB_OUTPUT
+
+    # ② Path filtering: Check if local repo changed
+    - name: Filter local changes
+      id: filter
+      uses: dorny/paths-filter@v3
+      with:
+        list-files: shell
+        filters: |
+          build:
+            - 'Tweak/**'
+            - 'Makefile'
+            - '.github/workflows/**'
+
+    # ③ Calculate the overall build flag
+    - name: Decide build flags
+      id: set
+      run: |
+        STORED=$(cat UPSTREAM_COMMIT 2>/dev/null || echo none)
+        UP_CHANGED=false
+        [[ "$STORED" != "${{ steps.upstream.outputs.sha }}" ]] && UP_CHANGED=true
+
+        SHOULD=$([[ "$UP_CHANGED" == true || "${{ steps.filter.outputs.build }}" == 'true' ]] && echo true || echo false)
+
+        echo "up_changed=$UP_CHANGED"   >>$GITHUB_OUTPUT
+        echo "sha=${{ steps.upstream.outputs.sha }}"   >>$GITHUB_OUTPUT
+        echo "should=$SHOULD"           >>$GITHUB_OUTPUT
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.should_build == 'true'
+    runs-on: macos-latest
+    strategy:
+      matrix: { scheme: [rootful, rootless] }
+
+    env:
+      LS_CHANGED: ${{ needs.detect.outputs.upstream_changed }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Clone upstream @sha
+      if: env.LS_CHANGED == 'true'
+      run: |
+        git clone --depth=1 https://github.com/QMUI/LookinServer.git upstream
+        # Check out the exact commit for consistency
+        cd upstream && git checkout ${{ needs.detect.outputs.sha }}
+
+    - name: Install CocoaPods & pod install
+      if: env.LS_CHANGED == 'true'
+      uses: maxim-lobanov/setup-cocoapods@v1
+      with:
+        version: latest
+
+    - name: pod install (LookinDemo)
+      if: env.LS_CHANGED == 'true'
+      working-directory: upstream/${{ env.LOOKIN_DEMO_PATH }}
+      run: pod install
+
+    - name: xcodebuild archive LookinDemoOC
+      if: env.LS_CHANGED == 'true'
+      working-directory: upstream/${{ env.LOOKIN_DEMO_PATH }}
+      run: |
+        xcodebuild archive \
+          -workspace "${{ env.DEMO_SCHEME }}.xcworkspace" \
+          -scheme     "${{ env.DEMO_SCHEME }}" \
+          -configuration Release \
+          -sdk iphoneos \
+          -destination 'generic/platform=iOS' \
+          BUILD_LIBRARIES_FOR_DISTRIBUTION=YES \
+          SKIP_INSTALL=NO \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
+          -archivePath build/${{ env.DEMO_SCHEME }}.xcarchive
+
+    - name: Copy LookinServer binary
+      if: env.LS_CHANGED == 'true'
+      run: |
+        SRC=upstream/${{ env.LOOKIN_DEMO_PATH }}/build/${{ env.DEMO_SCHEME }}.xcarchive/Products/Applications/${{ env.DEMO_SCHEME }}.app/Frameworks/LookinServer.framework/LookinServer
+        test -f "$SRC" || { echo "Binary not found"; exit 1; }
+        cp -f "$SRC" Tweak/layout/Library/LookinLoader/LookinServer
+
+    - name: Cache Theos
+      uses: actions/cache@v3
+      with:
+        path: theos
+        key: ${{ runner.os }}-theos-${{ hashFiles('**/Makefile') }}
+        restore-keys: ${{ runner.os }}-theos-
+
+    - uses: Randomblock1/theos-action@v1
+    - name: Configure Theos env
+      run: |
+        echo "ARCHS=arm64 arm64e" >> $GITHUB_ENV
+        if [[ "${{ matrix.scheme }}" == "rootless" ]]; then
+          echo "THEOS_PACKAGE_SCHEME=rootless" >> $GITHUB_ENV
+        fi
+
+    - name: make package
+      run: make -C Tweak clean package FINALPACKAGE=1
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.scheme }}-deb
+        path: Tweak/packages/*.deb
+
+    - name: Commit updated LookinServer + SHA
+      if: env.LS_CHANGED == 'true' && matrix.scheme == 'rootless'
+      run: |
+        echo "${{ needs.detect.outputs.sha }}" > UPSTREAM_COMMIT
+        git config user.name  github-actions
+        git config user.email github-actions@github.com
+        git add UPSTREAM_COMMIT Tweak/layout/Library/LookinLoader/LookinServer
+        git commit -m "chore: update LookinServer to ${{ needs.detect.outputs.sha }}"
+        git push
